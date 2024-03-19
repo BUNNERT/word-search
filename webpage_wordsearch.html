@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Search Puzzle</title>
+<style>
+.crossed-out {
+  text-decoration: line-through;
+}
+.green-selected {
+  background-color: #90ee90; /* Light green background for selected cells */
+}
+table {
+  border-collapse: collapse;
+  margin: auto;
+}
+td {
+  border: 1px solid #333;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+}
+.selected {
+  background-color: #ffff99; /* Light yellow, for example */
+}
+#word-list {
+  max-width: 546px; /* Adjust this value to match your word search grid's width */
+  margin: 0 auto; /* Centers the container */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Center the items horizontally */
+  padding: 0;
+}
+#word-list ul {
+  width: 100%;
+  padding: 0;
+  list-style-type: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#word-list li {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  margin: 5px 10px; /* Adjust margins as needed */
+  white-space: nowrap; /* Prevents the text within from wrapping */
+}
+#buttons-container {
+  display: flex;
+  justify-content: center; /* Horizontally center the content */
+  margin-top: 20px; /* Adjust as needed for spacing between the crossword and the buttons */
+}
+#timerDisplay {
+  text-align: center;
+  font-size: 20px;
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div id="startModal" style="display: flex; align-items: center; justify-content: center; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000;">
+  <div style="background-color: #fff; padding: 20px; text-align: center;">
+    Wil je spelen?
+    <br>
+    <button onclick="startGame()">Ja, start het spel</button>
+  </div>
+</div>
+
+<div id="timerDisplay">0:00</div>
+
+<div id="word-list">
+  <ul>
+    <li id="word0">EIGENVALUES</li>
+    <li id="word1">LINEAIRE</li>
+    <li id="word2">ALGEBRA</li>
+    <li id="word3">WISKUNDE</li>
+    <li id="word4">VECTOR</li>
+    <li id="word5">MATRIX</li>
+    <li id="word6">LIJNEN</li>
+    <li id="word7">VARIABLE</li>
+    <li id="word8">DIAGONAL</li>
+  </ul>
+</div>
+<div id="word-search" style="position: relative;">
+  <svg id="selection-line" style="position: absolute; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%;"></svg>
+</div>
+
+<div id="congratsModal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000;">
+  <div style="background-color:#fff; margin:15% auto; padding:20px; width:80%; max-width:300px; text-align:center;">
+    Geweldig, jij hebt de puzzel opgelost! Morgen vind je weer een gloednieuwe puzzel om je hersenen te trainen. Jouw voltooiingstijd: <span id="completionTime"></span>.
+    <div id="countdownTimer" style="margin-top: 20px;">Laden van timer...</div> <!-- Placeholder updated for the countdown timer -->
+    <div style="margin-top: 20px;">
+      <button onclick="document.getElementById('congratsModal').style.display='none';resetGame();">OK</button>
+      <button onclick="resetGame()">Speel Opnieuw</button>
+    </div>
+  </div>
+</div>
+
+<div id="buttons-container">
+  <button id="resetButton" onclick="resetGame()">Reset</button>
+  <button id="showSolutionButton" onclick="showSolution()">Toon Oplossing</button>
+</div>
+<script>
+let startTime;
+let endTime;
+let timerInterval;
+
+function startGame() {
+    document.getElementById('startModal').style.display = 'none';
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimerDisplay, 1000); // Start updating the timer every second
+}
+
+function resetGame() {
+    location.reload(); // Reloads the page to reset the game
+}
+
+function updateTimerDisplay() {
+    const now = Date.now();
+    const elapsed = now - startTime; // milliseconds elapsed since start
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = ((elapsed % 60000) / 1000).toFixed(0);
+    document.getElementById('timerDisplay').textContent = minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
+  document.addEventListener('DOMContentLoaded', function () {
+    var puzzle = [['O', 'M', 'H', 'Q', 'x', 'i', 'r', 't', 'a', 'M', 'F', 'D', 'Y'], ['Q', 'A', 'D', 'E', 'M', 'e', 'Y', 'I', 'D', 'M', 'W', 'V', 'C'], ['s', 'K', 'D', 'X', 'V', 'a', 'r', 'i', 'a', 'b', 'l', 'e', 'J'], ['W', 'e', 'P', 'J', 'X', 'V', 'a', 'i', 'Z', 'L', 'Z', 'J', 'I'], ['i', 'T', 'u', 'T', 'C', 'g', 'e', 'A', 'a', 'V', 'A', 'D', 'Q'], ['s', 'W', 'L', 'l', 'o', 'I', 'l', 'c', 'Y', 'e', 'U', 'X', 'B'], ['k', 'J', 'H', 'n', 'a', 'g', 'n', 'P', 't', 'S', 'n', 'V', 'Z'], ['u', 'O', 'a', 'A', 'e', 'v', 'e', 'F', 'H', 'o', 'O', 'i', 'W'], ['n', 'l', 'W', 'b', 'N', 'D', 'n', 'D', 'J', 'K', 'r', 'J', 'L'], ['d', 'H', 'r', 'L', 'Z', 'E', 'j', 'e', 'M', 'G', 'Q', 'V', 'D'], ['e', 'a', 'O', 'A', 'L', 'W', 'i', 'I', 'g', 'I', 'Q', 'J', 'E'], ['V', 'G', 'O', 'R', 'B', 'C', 'L', 'K', 'M', 'i', 'P', 'T', 'Z'], ['U', 'E', 'K', 'Z', 'G', 'Y', 'L', 'K', 'F', 'S', 'E', 'K', 'N']];
+function startPuzzle() {
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimerDisplay, 1000); // Update the timer display every second
+    // Other initialization code...
+}
+    puzzle = puzzle.map(row => row.map(letter => letter.toUpperCase()));
+
+    words = ["EIGENVALUES", "LINEAIRE", "ALGEBRA", "WISKUNDE", "VECTOR", "MATRIX", "LIJNEN", "VARIABLE", "DIAGONAL"]
+    var wordSearchDiv = document.getElementById('word-search');
+    var table = document.createElement('table');
+    wordSearchDiv.appendChild(table);
+    var selectedPositions = new Set();
+    var selectedLetters = [];
+
+puzzle.forEach(function(rowData, rowIndex) {
+    var row = document.createElement('tr');
+    rowData.forEach(function(cellData, cellIndex) {
+        var cell = document.createElement('td');
+        cell.textContent = cellData;
+        cell.setAttribute('data-row', rowIndex);
+        cell.setAttribute('data-col', cellIndex);
+        // Rest of your cell setup...
+        row.appendChild(cell);
+    });
+    table.appendChild(row);
+});
+
+
+    let isSelecting = false;
+    let startCell = null;
+    let endCell = null;
+
+document.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'TD') {
+        isSelecting = true;
+        let rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
+        let colIndex = parseInt(e.target.getAttribute('data-col'), 10);
+        startSelection(rowIndex, colIndex);
+        e.preventDefault(); // Might be necessary to prevent text selection on drag
+    }
+});
+
+document.addEventListener('mouseup', function() {
+    if (isSelecting) {
+        finalizeSelection();
+        isSelecting = false;
+    }
+});
+
+// Use event delegation for the 'mouseenter' event on the table
+table.addEventListener('mouseenter', function(e) {
+    if (isSelecting && e.target.tagName === 'TD') {
+        let rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
+        let colIndex = parseInt(e.target.getAttribute('data-col'), 10);
+        updateSelection(rowIndex, colIndex);
+    }
+}, true);
+
+    function startSelection(rowIndex, cellIndex) {
+    clearSelection();
+    startCell = {row: rowIndex, col: cellIndex};
+    endCell = {row: rowIndex, col: cellIndex};
+    updateSelection(rowIndex, cellIndex);
+  }
+
+    function updateSelection(rowIndex, cellIndex) {
+    if (!startCell || !isSelecting) return;
+    endCell = {row: rowIndex, col: cellIndex};
+
+    let newSelection = getCellsBetween(startCell, endCell);
+    let newSelectedPositions = new Set(newSelection.map(pos => `${pos.row},${pos.col}`));
+
+    selectedPositions.forEach(pos => {
+    if (!newSelectedPositions.has(pos)) {
+    let [row, col] = pos.split(',').map(Number);
+    table.rows[row].cells[col].classList.remove('selected');
+  }
+  });
+
+    newSelection.forEach(({row, col}) => {
+    let cellPos = `${row},${col}`;
+    if (!selectedPositions.has(cellPos)) {
+    table.rows[row].cells[col].classList.add('selected');
+  }
+  });
+
+    selectedPositions = newSelectedPositions;
+  }
+
+    function getCellsBetween(start, end) {
+    let cells = [];
+    let rowIncrement = end.row > start.row ? 1 : (end.row < start.row ? -1 : 0);
+    let colIncrement = end.col > start.col ? 1 : (end.col < start.col ? -1 : 0);
+    let currentRow = start.row;
+    let currentCol = start.col;
+
+    while (currentRow !== end.row || currentCol !== end.col) {
+    cells.push({row: currentRow, col: currentCol});
+    if (currentRow === end.row && currentCol === end.col) break;
+    if (currentRow !== end.row) currentRow += rowIncrement;
+    if (currentCol !== end.col) currentCol += colIncrement;
+  }
+    cells.push({row: end.row, col: end.col}); // Ensure end cell is included
+    return cells;
+  }
+
+    function clearSelection() {
+    selectedPositions.forEach(pos => {
+    let [row, col] = pos.split(',').map(Number);
+    table.rows[row].cells[col].classList.remove('selected');
+  });
+    selectedPositions.clear();
+  }
+function checkAllWordsFound() {
+    const allWords = document.querySelectorAll('#word-list li');
+    const allFound = Array.from(allWords).every(li => li.classList.contains('crossed-out'));
+
+    if (allFound) {
+        endTime = Date.now();
+        clearInterval(timerInterval); // Stop updating the timer display
+        showCongratulations();
+        displayCompletionTime();
+    }
+}
+
+function displayCompletionTime() {
+    const completionTime = endTime - startTime;
+    const minutes = Math.floor(completionTime / 60000);
+    const seconds = ((completionTime % 60000) / 1000).toFixed(0);
+    // Display the completion time in the congratulations modal or another preferred location
+    document.getElementById('completionTime').textContent = `${minutes}m ${seconds}s`;
+}
+
+
+function showCongratulations() {
+  document.getElementById('congratsModal').style.display = 'block';
+}
+
+function finalizeSelection() {
+  let word = Array.from(selectedPositions).map(pos => {
+    let [row, col] = pos.split(',').map(Number);
+    return puzzle[row][col];
+  }).join('');
+
+  let isWordFound = words.includes(word);
+
+  // If the word is correct, apply the green-selected class and strikethrough the word in the list
+  if (isWordFound) {
+    selectedPositions.forEach(pos => {
+      let [row, col] = pos.split(',').map(Number);
+      let cell = table.rows[row].cells[col];
+      cell.classList.remove('selected'); // Remove the temporary selection highlight
+      cell.classList.add('green-selected'); // Add the permanent correct word highlight
+    });
+
+    // Strikethrough the found word in the word list
+    document.querySelectorAll('#word-list li').forEach(li => {
+      if (li.textContent.toUpperCase() === word) {
+        li.classList.add('crossed-out');
+      }
+    });
+    checkAllWordsFound();
+  }
+
+
+  // Clear the selection
+  if (!isWordFound) {
+    // If the word is not found, just remove the yellow selection highlight from all cells
+    selectedPositions.forEach(pos => {
+      let [row, col] = pos.split(',').map(Number);
+      table.rows[row].cells[col].classList.remove('selected');
+    });
+  }
+
+  // Reset selection tracking
+  startCell = null;
+  endCell = null;
+  selectedPositions.clear();
+}
+document.getElementById('resetButton').addEventListener('click', function() {
+  var confirmReset = confirm("Weet je zeker dat je opnieuw wilt beginnen?");
+  if (confirmReset) {
+    // Reset the game
+    location.reload(); // Simple page reload resets the game
+  }
+});
+
+document.getElementById('showSolutionButton').addEventListener('click', function() {
+  document.querySelectorAll('#word-list li').forEach(function(li) {
+    li.classList.add('crossed-out'); // Simulate finding all words
+    // Optionally, highlight all words in green in the puzzle
+    var word = li.textContent.toUpperCase();
+    highlightWordInGrid(word);
+  });
+});
+
+function highlightWordInGrid(word) {
+    const directions = [
+        { dx: 1, dy: 0 }, { dx: -1, dy: 0 }, // Right, Left
+        { dx: 0, dy: 1 }, { dx: 0, dy: -1 }, // Down, Up
+        { dx: 1, dy: 1 }, { dx: -1, dy: -1 }, // Diagonal Down-Right, Diagonal Up-Left
+        { dx: 1, dy: -1 }, { dx: -1, dy: 1 }  // Diagonal Up-Right, Diagonal Down-Left
+    ];
+
+    // Iterate over each cell in the grid
+    for (let row = 0; row < puzzle.length; row++) {
+        for (let col = 0; col < puzzle[row].length; col++) {
+            if (puzzle[row][col] === word[0]) { // Check if the cell matches the first letter of the word
+                for (let direction of directions) { // Check each direction
+                    if (checkWordInDirection(word, row, col, direction.dx, direction.dy)) {
+                        highlightCells(word, row, col, direction.dx, direction.dy);
+                        return; // Assuming only one instance of each word
+                    }
+                }
+            }
+        }
+    }
+}
+
+function checkWordInDirection(word, row, col, dx, dy) {
+    for (let i = 0; i < word.length; i++) {
+        let newRow = row + i * dy;
+        let newCol = col + i * dx;
+
+        // Check boundaries
+        if (newRow < 0 || newRow >= puzzle.length || newCol < 0 || newCol >= puzzle[row].length) {
+            return false; // Out of bounds
+        }
+
+        // Check if the letters match
+        if (puzzle[newRow][newCol] !== word[i]) {
+            return false; // Letter mismatch
+        }
+    }
+    return true; // Word found in this direction
+}
+
+function highlightCells(word, row, col, dx, dy) {
+    for (let i = 0; i < word.length; i++) {
+        let newRow = row + i * dy;
+        let newCol = col + i * dx;
+        let cell = document.querySelector(`td[data-row="${newRow}"][data-col="${newCol}"]`);
+        cell.classList.add('green-selected');
+    }
+}
+function getTimeUntilNextPuzzle() {
+    const now = new Date();
+    let nextPuzzleTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0); // Today at 9:00 AM
+
+    // If it's already past 9:00 AM today, set the target to 9:00 AM tomorrow
+    if (now > nextPuzzleTime) {
+        nextPuzzleTime.setDate(nextPuzzleTime.getDate() + 1);
+    }
+
+    const diffMs = nextPuzzleTime - now; // Difference in milliseconds
+    return diffMs;
+}
+function startCountdown() {
+    const countdownElement = document.getElementById('countdownTimer');
+
+    const updateCountdown = () => {
+        const timeLeftMs = getTimeUntilNextPuzzle();
+        const hours = Math.floor((timeLeftMs / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((timeLeftMs / (1000 * 60)) % 60);
+        const seconds = Math.floor((timeLeftMs / 1000) % 60);
+
+        // Use innerHTML to set the content with HTML for line breaks
+        countdownElement.innerHTML = `<strong>Tijd tot de volgende puzzel van de dag:</strong><br>${hours}h ${minutes}m ${seconds}s`;
+
+        if (timeLeftMs <= 0) {
+            clearInterval(interval); // Stop the countdown when it reaches 0
+            countdownElement.innerHTML = "<strong>Een nieuwe puzzel is nu beschikbaar!</strong>";
+        }
+    };
+
+    updateCountdown(); // Update immediately, not only after 1 second
+    const interval = setInterval(updateCountdown, 1000);
+}
+
+function showCongratulations() {
+    document.getElementById('congratsModal').style.display = 'block';
+    startCountdown(); // Start the countdown timer
+}
+
+  });
+</script>
+</body>
+</html>
