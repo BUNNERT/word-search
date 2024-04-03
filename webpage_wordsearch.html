@@ -8,411 +8,521 @@
 .crossed-out {
   text-decoration: line-through;
 }
-.green-selected {
-  background-color: #90ee90; /* Light green background for selected cells */
+.crossed-out-word::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 2px; /* Thickness of the line */
+    background-color: black; /* Color of the line */
+    transform-origin: center;
 }
+.permanent-line {
+  stroke: red; /* or any color that stands out */
+  stroke-width: 2; /* or any width that makes it visible */
+}
+
+
+.line-horizontal::after {
+    transform: rotate(0deg);
+}
+
+.line-vertical::after {
+    transform: rotate(90deg);
+}
+
+.line-diagonal::after {
+    /* Adjust the angle based on the specific diagonal direction */
+    transform: rotate(45deg); /* Example for a right-down diagonal */
+}
+
 table {
   border-collapse: collapse;
   margin: auto;
 }
 td {
   border: 1px solid #333;
-  width: 40px;
-  height: 40px;
+  width: 24px; /* Decrease width to make blocks smaller */
+  height: 24px; /* Decrease height to make blocks smaller */
   text-align: center;
   font-family: Arial, sans-serif;
-  font-size: 20px;
+  font-size: 16px; /* Decrease font size to fit smaller blocks */
   cursor: pointer;
 }
+
 .selected {
   background-color: #ffff99; /* Light yellow, for example */
 }
-#word-list {
-  max-width: 546px; /* Adjust this value to match your word search grid's width */
-  margin: 0 auto; /* Centers the container */
+#hidden-word-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center; /* Center the items horizontally */
+  justify-content: center;
+  gap: 10px; /* Space between blocks */
+}
+
+.hidden-word-block {
+  width: 24px; /* Width of each block */
+  height: 24px; /* Height of each block */
+  text-align: center;
+  border: 1px solid #333;
+}
+#word-list {
+  max-width: 360px; /* Adjust this value to match your word search grid's width */
+  margin: 20px auto; /* Centers the container and adds some space from the top */
+  text-align: center; /* Center-align the words */
   padding: 0;
 }
 #word-list ul {
   width: 100%;
   padding: 0;
   list-style-type: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 #word-list li {
   font-family: Arial, sans-serif;
-  font-size: 20px;
-  margin: 5px 10px; /* Adjust margins as needed */
+  font-size: 12px; /* Decrease font size to fit smaller grid */
+  margin: 5px; /* Adjust margins as needed */
   white-space: nowrap; /* Prevents the text within from wrapping */
+  display: inline-block; /* Display words inline and allow them to wrap */
 }
 #buttons-container {
   display: flex;
   justify-content: center; /* Horizontally center the content */
-  margin-top: 20px; /* Adjust as needed for spacing between the crossword and the buttons */
+  margin-top: 24px; /* Adjust as needed for spacing between the crossword and the buttons */
 }
-#timerDisplay {
-  text-align: center;
-  font-size: 20px;
-  margin-top: 20px;
+
+#selection-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%; /* Adjust based on the grid size */
+  height: 100%; /* Adjust based on the grid size */
+  pointer-events: none; /* Allows click events to pass through to the grid */
 }
 </style>
 </head>
 <body>
-<div id="startModal" style="display: flex; align-items: center; justify-content: center; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 2000;">
-  <div style="background-color: #fff; padding: 20px; text-align: center;">
-    Wil je spelen?
-    <br>
-    <button onclick="startGame()">Ja, start het spel</button>
-  </div>
-</div>
-
-<div id="timerDisplay">0:00</div>
-
 <div id="word-list">
   <ul>
-    <li id="word0">EIGENVALUES</li>
-    <li id="word1">LINEAIRE</li>
-    <li id="word2">ALGEBRA</li>
-    <li id="word3">WISKUNDE</li>
-    <li id="word4">VECTOR</li>
-    <li id="word5">MATRIX</li>
-    <li id="word6">LIJNEN</li>
-    <li id="word7">VARIABLE</li>
-    <li id="word8">DIAGONAL</li>
+    <li id="word0">Kampioenschap</li>
+    <li id="word1">Middenvelder</li>
+    <li id="word2">Voetballers</li>
+    <li id="word3">Overtreding</li>
+    <li id="word4">Verdediger</li>
+    <li id="word5">Buitenspel</li>
+    <li id="word6">Gelijkspel</li>
+    <li id="word7">Opstelling</li>
+    <li id="word8">Bondscoach</li>
+    <li id="word9">Uitrusting</li>
+    <li id="word10">Wedstrijd</li>
+    <li id="word11">Aanvaller</li>
+    <li id="word12">Supporter</li>
+    <li id="word13">Goal</li>
+    <li id="word14">Lijn</li>
+    <li id="word15">Vlag</li>
+    <li id="word16">Foul</li>
+    <li id="word17">Bal</li>
+    <li id="word18">Fan</li>
+    <li id="word19">Run</li>
+    <li id="word20">Sky</li>
+    <li id="word21">Bag</li>
   </ul>
 </div>
 <div id="word-search" style="position: relative;">
   <svg id="selection-line" style="position: absolute; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%;"></svg>
 </div>
+<div id="hidden-word-input-container" style="text-align: center; margin-top: 20px;">
+  <input type="text" id="hiddenWordInput" placeholder="Enter the hidden word"/>
+  <button onclick="checkHiddenWord()">Submit</button>
+</div>
 
 <div id="congratsModal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:1000;">
   <div style="background-color:#fff; margin:15% auto; padding:20px; width:80%; max-width:300px; text-align:center;">
-    Geweldig, jij hebt de puzzel opgelost! Morgen vind je weer een gloednieuwe puzzel om je hersenen te trainen. Jouw voltooiingstijd: <span id="completionTime"></span>.
-    <div id="countdownTimer" style="margin-top: 20px;">Laden van timer...</div> <!-- Placeholder updated for the countdown timer -->
+    Geweldig, jij hebt de puzzel opgelost! Morgen vind je weer een gloednieuwe puzzel om je hersenen te trainen.
+    <div id="countdownTimer" style="margin-top: 20px;">Laden van timer...</div>
     <div style="margin-top: 20px;">
-      <button onclick="document.getElementById('congratsModal').style.display='none';resetGame();">OK</button>
-      <button onclick="resetGame()">Speel Opnieuw</button>
+      <button onclick="document.getElementById('congratsModal').style.display='none';">OK</button>
+      <button onclick="resetGame()">Speel Opnieuw</button> <!-- This is the reset game button -->
     </div>
   </div>
 </div>
 
-<div id="buttons-container">
-  <button id="resetButton" onclick="resetGame()">Reset</button>
-  <button id="showSolutionButton" onclick="showSolution()">Toon Oplossing</button>
-</div>
+
 <script>
-let startTime;
-let endTime;
-let timerInterval;
+var countDownDate = new Date();
+countDownDate.setDate(countDownDate.getDate() + 1);
+countDownDate.setHours(0, 0, 0, 0); // Middernacht
 
-function startGame() {
-    document.getElementById('startModal').style.display = 'none';
-    startTime = Date.now();
-    timerInterval = setInterval(updateTimerDisplay, 1000); // Start updating the timer every second
+// Update de countdown elke seconde
+var x = setInterval(function() {
+
+  // Haal de huidige datum en tijd op
+  var now = new Date().getTime();
+
+  // Bereken het verschil in tijd tussen nu en de countdown tijd
+  var distance = countDownDate - now;
+
+  // Tijd berekeningen voor dagen, uren, minuten en seconden
+  var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+  // Toon het resultaat in het element met id="countdownTimer"
+  document.getElementById("countdownTimer").innerHTML = days + "d " + hours + "h "
+  + minutes + "m " + seconds + "s ";
+
+  // Als de countdown voltooid is, toon dan een bericht
+  if (distance < 0) {
+    clearInterval(x);
+    document.getElementById("countdownTimer").innerHTML = "Een nieuwe puzzel is nu beschikbaar!";
+  }
+}, 1000);
+
+document.addEventListener('DOMContentLoaded', function () {
+  var puzzle = [['g', 'g', 'O', 'S', 'B', 'V', 'o', 'a', 'F', 'K', 'R', 'l', 'S'], ['r', 'a', 'v', 'u', 'o', 'O', 'B', 'l', 'G', 'a', 'u', 'a', 'k'], ['e', 'B', 'e', 'p', 'n', 'E', 'g', 'a', 'e', 'm', 'n', 'o', 'y'], ['d', 'U', 'r', 'p', 'd', 'T', 'n', 'r', 'l', 'p', 'l', 'G', 'd'], ['l', 'i', 't', 'o', 's', 'B', 'i', 'e', 'i', 'i', 'e', 'r', 'j'], ['e', 't', 'r', 'r', 'c', 'A', 'l', 'g', 'j', 'o', 'p', 'e', 'i'], ['v', 'r', 'e', 't', 'o', 'L', 'l', 'i', 'k', 'e', 's', 'l', 'r'], ['n', 'u', 'd', 'e', 'a', 'L', 'e', 'd', 's', 'n', 'n', 'l', 't'], ['e', 's', 'i', 'r', 'c', 'E', 't', 'e', 'p', 's', 'e', 'a', 's'], ['d', 't', 'n', 'V', 'h', 'R', 's', 'd', 'e', 'c', 't', 'v', 'd'], ['d', 'i', 'g', 'k', 'l', 'S', 'p', 'r', 'l', 'h', 'i', 'n', 'e'], ['i', 'n', 'j', 'i', 'L', 'a', 'O', 'e', 'e', 'a', 'u', 'a', 'W'], ['M', 'g', 'l', 'u', 'o', 'F', 'g', 'V', 'e', 'p', 'B', 'A', 'p']];
+  puzzle = puzzle.map(row => row.map(letter => letter.toUpperCase()));
+  let words = ['Kampioenschap', 'Middenvelder', 'Zaalvoetbal', 'Overtreding', 'Verdediger', 'Buitenspel', 'Gelijkspel', 'Opstelling', 'Bondscoach', 'Uitrusting', 'Wedstrijd', 'Aanvaller', 'Supporter', 'Goal', 'Lijn', 'Vlag', 'Foul', 'Bal', 'Fan', 'Run', 'Sky', 'Bag'].map(word => word.toUpperCase());
+
+
+  var wordSearchDiv = document.getElementById('word-search');
+  var table = document.createElement('table');
+  wordSearchDiv.appendChild(table);
+
+  puzzle.forEach((rowData, rowIndex) => {
+      const row = document.createElement('tr');
+      rowData.forEach((cellData, cellIndex) => {
+          const cell = document.createElement('td');
+          cell.textContent = cellData;
+          cell.setAttribute('data-row', rowIndex);
+          cell.setAttribute('data-col', cellIndex);
+          row.appendChild(cell);
+      });
+      table.appendChild(row);
+  });
+
+  let isSelecting = false;
+  let startCell = null;
+  let endCell = null; // Add this at the top with your other variable declarations
+  var isValidStart = true; // Voeg deze variabele toe aan de top van je script
+
+  const svg = document.getElementById('selection-line');
+function markCellsAsFound(startCell, endCell) {
+  const rowIncrement = endCell.row > startCell.row ? 1 : (endCell.row < startCell.row ? -1 : 0);
+  const colIncrement = endCell.col > startCell.col ? 1 : (endCell.col < startCell.col ? -1 : 0);
+
+  let currentRow = startCell.row;
+  let currentCol = startCell.col;
+
+  while (true) {
+    const cell = document.querySelector(`td[data-row="${currentRow}"][data-col="${currentCol}"]`);
+    if (cell) cell.classList.add('part-of-found-word');
+    if (currentRow === endCell.row && currentCol === endCell.col) break;
+    currentRow += rowIncrement;
+    currentCol += colIncrement;
+  }
 }
 
-function resetGame() {
-    location.reload(); // Reloads the page to reset the game
-}
-
-function updateTimerDisplay() {
-    const now = Date.now();
-    const elapsed = now - startTime; // milliseconds elapsed since start
-    const minutes = Math.floor(elapsed / 60000);
-    const seconds = ((elapsed % 60000) / 1000).toFixed(0);
-    document.getElementById('timerDisplay').textContent = minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
-}
-  document.addEventListener('DOMContentLoaded', function () {
-    var puzzle = [['O', 'M', 'H', 'Q', 'x', 'i', 'r', 't', 'a', 'M', 'F', 'D', 'Y'], ['Q', 'A', 'D', 'E', 'M', 'e', 'Y', 'I', 'D', 'M', 'W', 'V', 'C'], ['s', 'K', 'D', 'X', 'V', 'a', 'r', 'i', 'a', 'b', 'l', 'e', 'J'], ['W', 'e', 'P', 'J', 'X', 'V', 'a', 'i', 'Z', 'L', 'Z', 'J', 'I'], ['i', 'T', 'u', 'T', 'C', 'g', 'e', 'A', 'a', 'V', 'A', 'D', 'Q'], ['s', 'W', 'L', 'l', 'o', 'I', 'l', 'c', 'Y', 'e', 'U', 'X', 'B'], ['k', 'J', 'H', 'n', 'a', 'g', 'n', 'P', 't', 'S', 'n', 'V', 'Z'], ['u', 'O', 'a', 'A', 'e', 'v', 'e', 'F', 'H', 'o', 'O', 'i', 'W'], ['n', 'l', 'W', 'b', 'N', 'D', 'n', 'D', 'J', 'K', 'r', 'J', 'L'], ['d', 'H', 'r', 'L', 'Z', 'E', 'j', 'e', 'M', 'G', 'Q', 'V', 'D'], ['e', 'a', 'O', 'A', 'L', 'W', 'i', 'I', 'g', 'I', 'Q', 'J', 'E'], ['V', 'G', 'O', 'R', 'B', 'C', 'L', 'K', 'M', 'i', 'P', 'T', 'Z'], ['U', 'E', 'K', 'Z', 'G', 'Y', 'L', 'K', 'F', 'S', 'E', 'K', 'N']];
-function startPuzzle() {
-    startTime = Date.now();
-    timerInterval = setInterval(updateTimerDisplay, 1000); // Update the timer display every second
-    // Other initialization code...
-}
-    puzzle = puzzle.map(row => row.map(letter => letter.toUpperCase()));
-
-    words = ["EIGENVALUES", "LINEAIRE", "ALGEBRA", "WISKUNDE", "VECTOR", "MATRIX", "LIJNEN", "VARIABLE", "DIAGONAL"]
-    var wordSearchDiv = document.getElementById('word-search');
-    var table = document.createElement('table');
-    wordSearchDiv.appendChild(table);
-    var selectedPositions = new Set();
-    var selectedLetters = [];
-
-puzzle.forEach(function(rowData, rowIndex) {
-    var row = document.createElement('tr');
-    rowData.forEach(function(cellData, cellIndex) {
-        var cell = document.createElement('td');
-        cell.textContent = cellData;
-        cell.setAttribute('data-row', rowIndex);
-        cell.setAttribute('data-col', cellIndex);
-        // Rest of your cell setup...
-        row.appendChild(cell);
-    });
-    table.appendChild(row);
+// Stel dat elke 'td' een data-word attribuut heeft dat overeenkomt met het woord
+table.addEventListener('mousedown', function(e) {
+  if (e.target.tagName === 'TD') {
+    const rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
+    const colIndex = parseInt(e.target.getAttribute('data-col'), 10);
+    startCell = { row: rowIndex, col: colIndex };
+    isValidStart = !e.target.classList.contains('part-of-found-word'); // Check of de start geldig is
+    isSelecting = true; // Sta slepen altijd toe voor visuele feedback
+    e.preventDefault(); // Voorkom tekstselectie
+  }
 });
 
 
-    let isSelecting = false;
-    let startCell = null;
-    let endCell = null;
 
-document.addEventListener('mousedown', function(e) {
-    if (e.target.tagName === 'TD') {
-        isSelecting = true;
-        let rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
-        let colIndex = parseInt(e.target.getAttribute('data-col'), 10);
-        startSelection(rowIndex, colIndex);
-        e.preventDefault(); // Might be necessary to prevent text selection on drag
-    }
+table.addEventListener('mousemove', function(e) {
+  if (!isSelecting || !startCell || e.target.tagName !== 'TD') return;
+
+  const rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
+  const colIndex = parseInt(e.target.getAttribute('data-col'), 10);
+  const currentCell = { row: rowIndex, col: colIndex };
+  drawSelectionLine(startCell, currentCell);
 });
 
-document.addEventListener('mouseup', function() {
-    if (isSelecting) {
-        finalizeSelection();
-        isSelecting = false;
+table.addEventListener('mouseup', function(e) {
+  if (!isSelecting || !startCell || e.target.tagName !== 'TD') return;
+
+  const rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
+  const colIndex = parseInt(e.target.getAttribute('data-col'), 10);
+  endCell = { row: rowIndex, col: colIndex };
+
+  if (startCell.row === endCell.row && startCell.col === endCell.col) {
+    // Handle the case where it's just a click without any drag
+    // If the start was on an invalid cell, clear any temporary lines
+    if (!isValidStart) {
+      console.log(isValidStart)
+      clearTemporaryLine(); // Clear any temporary line without making it permanent
     }
+    isSelecting = false;
+    startCell = null;
+    return; // Early return to avoid further processing
+  }
+
+  const selectedWord = getSelectedWord(startCell, endCell);
+
+  // Proceed only if the drag started from a valid cell
+  if (isValidStart) {
+    const wordFound = checkWord(selectedWord);
+    if (wordFound) {
+      markCellsAsFound(startCell, endCell); // Mark cells as part of a found word if needed
+      makeLastLinePermanent(); // Make the last line permanent only if the word was found and valid
+    } else {
+      clearTemporaryLine(); // Clear the temporary line if no valid word was found
+    }
+  } else {
+    clearTemporaryLine(); // Ensure temporary line is cleared if the start was invalid
+  }
+
+  isSelecting = false;
+  startCell = null;
 });
 
-// Use event delegation for the 'mouseenter' event on the table
-table.addEventListener('mouseenter', function(e) {
-    if (isSelecting && e.target.tagName === 'TD') {
-        let rowIndex = parseInt(e.target.getAttribute('data-row'), 10);
-        let colIndex = parseInt(e.target.getAttribute('data-col'), 10);
-        updateSelection(rowIndex, colIndex);
+
+
+
+function makeLastLinePermanent() {
+  const lastTemporaryLine = svg.querySelector('.temporary-line:last-of-type');
+  if (lastTemporaryLine) {
+    lastTemporaryLine.classList.remove('temporary-line');
+    lastTemporaryLine.classList.add('permanent-line');
+    lastTemporaryLine.setAttribute('stroke', 'red'); // Optional: Change color to indicate permanency
+  }
+}
+function finalizeSelectionLine() {
+  console.log('finalizeSelectionLine called');
+  // Assuming the last line drawn is the one we want to finalize
+  const temporaryLines = svg.querySelectorAll('.temporary-line');
+  if (temporaryLines.length) {
+    const lastLine = temporaryLines[temporaryLines.length - 1];
+    lastLine.classList.remove('temporary-line'); // Remove temporary class
+    lastLine.classList.add('permanent-line'); // Add a class to make it permanent
+    console.log('Line marked as permanent');
+  }
+}
+
+function getSelectedWord(startCell, endCell, direction) {
+    let word = '';
+    const rowIncrement = endCell.row > startCell.row ? 1 : (endCell.row < startCell.row ? -1 : 0);
+    const colIncrement = endCell.col > startCell.col ? 1 : (endCell.col < startCell.col ? -1 : 0);
+
+    let currentRow = startCell.row;
+    let currentCol = startCell.col;
+
+    while (true) {
+        if (currentRow < 0 || currentRow >= puzzle.length || currentCol < 0 || currentCol >= puzzle[0].length) {
+            break; // Prevents exceeding the puzzle bounds
+        }
+        word += puzzle[currentRow][currentCol];
+        if (currentRow === endCell.row && currentCol === endCell.col) break; // Stops when end cell is reached
+        currentRow += rowIncrement;
+        currentCol += colIncrement;
     }
-}, true);
+    return word;
+}
 
-    function startSelection(rowIndex, cellIndex) {
-    clearSelection();
-    startCell = {row: rowIndex, col: cellIndex};
-    endCell = {row: rowIndex, col: cellIndex};
-    updateSelection(rowIndex, cellIndex);
-  }
+function checkWord(selectedWord) {
+  const wordListItems = document.querySelectorAll('#word-list li');
+  let wordFound = false;
 
-    function updateSelection(rowIndex, cellIndex) {
-    if (!startCell || !isSelecting) return;
-    endCell = {row: rowIndex, col: cellIndex};
-
-    let newSelection = getCellsBetween(startCell, endCell);
-    let newSelectedPositions = new Set(newSelection.map(pos => `${pos.row},${pos.col}`));
-
-    selectedPositions.forEach(pos => {
-    if (!newSelectedPositions.has(pos)) {
-    let [row, col] = pos.split(',').map(Number);
-    table.rows[row].cells[col].classList.remove('selected');
-  }
+  wordListItems.forEach((item) => {
+    if (item.textContent.toUpperCase() === selectedWord.toUpperCase() && !item.classList.contains('crossed-out')) {
+      item.classList.add('crossed-out');
+      wordFound = true;
+    }
   });
 
-    newSelection.forEach(({row, col}) => {
-    let cellPos = `${row},${col}`;
-    if (!selectedPositions.has(cellPos)) {
-    table.rows[row].cells[col].classList.add('selected');
-  }
+  console.log(`CheckWord: ${selectedWord} found: ${wordFound}`);
+  return wordFound;
+}
+
+
+
+function clearTemporaryLine() {
+  console.log('clearTemporaryLine called'); // Log when this function is invoked
+  const temporaryLines = svg.querySelectorAll('.temporary-line');
+  console.log(`Found ${temporaryLines.length} temporary lines to clear.`); // Log the number of temporary lines found
+  temporaryLines.forEach(line => {
+    svg.removeChild(line); // Removing the line from the SVG
+    console.log('Temporary line removed.'); // Log each line removal
   });
+}
 
-    selectedPositions = newSelectedPositions;
+
+
+function drawLineOverWordInGrid(word, startCellCoordinates, endCellCoordinates) {
+  // Assume startCellCoordinates and endCellCoordinates are { row: x, col: y }
+  const startCell = document.querySelector(`td[data-row="${startCellCoordinates.row}"][data-col="${startCellCoordinates.col}"]`);
+  const endCell = document.querySelector(`td[data-row="${endCellCoordinates.row}"][data-col="${endCellCoordinates.col}"]`);
+
+  if (startCell && endCell) {
+    const line = createLineElement(startCell, endCell);
+    svg.innerHTML = ''; // Clear any previous lines if needed
+    svg.appendChild(line);
+  }
+}
+function getCellCoordinates(cell) {
+  return {
+    row: parseInt(cell.getAttribute('data-row'), 10),
+    col: parseInt(cell.getAttribute('data-col'), 10)
+  };
+}
+function addLine(startCellElement, endCellElement, isPermanent = false) {
+  const line = createLineElement(startCellElement, endCellElement, !isPermanent);
+  svg.appendChild(line);
+}
+
+
+function drawSelectionLine(start, current) {
+  const direction = determineDirection(start, current);
+  const adjustedCurrentCell = adjustCurrentCellForDirection(start, current, direction);
+  const startCellElement = table.querySelector(`td[data-row="${start.row}"][data-col="${start.col}"]`);
+  const currentCellElement = table.querySelector(`td[data-row="${adjustedCurrentCell.row}"][data-col="${adjustedCurrentCell.col}"]`);
+
+  if (startCellElement && currentCellElement) {
+    // Before creating a new line, ensure we're not removing any existing (permanent) lines
+    clearTemporaryLine(); // Ensure this function ONLY removes temporary lines
+    const line = createLineElement(startCellElement, currentCellElement);
+    svg.appendChild(line); // Append without clearing existing content
+  }
+}
+
+  function makeLinePermanent() {
+    // Find the last drawn line and make it permanent
+    const lines = svg.querySelectorAll('line');
+    if (lines.length) {
+      const lastLine = lines[lines.length - 1];
+      lastLine.classList.remove('temporary-line'); // If you're using this class
+      lastLine.classList.add('permanent-line');
+    }
   }
 
-    function getCellsBetween(start, end) {
-    let cells = [];
-    let rowIncrement = end.row > start.row ? 1 : (end.row < start.row ? -1 : 0);
-    let colIncrement = end.col > start.col ? 1 : (end.col < start.col ? -1 : 0);
-    let currentRow = start.row;
-    let currentCol = start.col;
+function determineDirection(start, current) {
+    const rowDiff = current.row - start.row;
+    const colDiff = current.col - start.col;
+    const angle = Math.atan2(Math.abs(rowDiff), Math.abs(colDiff)) * (180 / Math.PI);
 
-    while (currentRow !== end.row || currentCol !== end.col) {
-    cells.push({row: currentRow, col: currentCol});
-    if (currentRow === end.row && currentCol === end.col) break;
-    if (currentRow !== end.row) currentRow += rowIncrement;
-    if (currentCol !== end.col) currentCol += colIncrement;
-  }
-    cells.push({row: end.row, col: end.col}); // Ensure end cell is included
-    return cells;
+    // More lenient angle determination for diagonals
+    if (angle > 30 && angle < 60 || angle > 120 && angle < 150) {
+        return 'diagonal';
+    } else if (Math.abs(rowDiff) > Math.abs(colDiff)) {
+        return 'vertical';
+    } else {
+        return 'horizontal';
+    }
+}
+function highlightWordInGrid(word, direction) {
+    let { startCell, endCell } = findWordCoordinates(word); // This is a placeholder function
+
+    let currentRow = startCell.row;
+    let currentCol = startCell.col;
+    const rowIncrement = endCell.row > startCell.row ? 1 : (endCell.row < startCell.row ? -1 : 0);
+    const colIncrement = endCell.col > startCell.col ? 1 : (endCell.col < startCell.col ? -1 : 0);
+    const directionClass = `line-${direction}`;
+
+    while (true) {
+        const cell = document.querySelector(`td[data-row="${currentRow}"][data-col="${currentCol}"]`);
+        if (cell) {
+            cell.classList.add('crossed-out-word'); // Updated class name
+            cell.classList.add(directionClass); // Apply the direction-specific class for the line
+        }
+        if (currentRow === endCell.row && currentCol === endCell.col) break;
+        currentRow += rowIncrement;
+        currentCol += colIncrement;
+    }
+}
+
+
+
+  function adjustCurrentCellForDirection(start, current, direction) {
+    switch (direction) {
+      case 'horizontal':
+        return { row: start.row, col: current.col };
+      case 'vertical':
+        return { row: current.row, col: start.col };
+      case 'diagonal':
+        const rowDiff = current.row - start.row;
+        const colDiff = current.col - start.col;
+        const absDiff = Math.min(Math.abs(rowDiff), Math.abs(colDiff));
+        return {
+          row: start.row + Math.sign(rowDiff) * absDiff,
+          col: start.col + Math.sign(colDiff) * absDiff
+        };
+      default:
+        return current; // Should not reach here
+    }
   }
 
-    function clearSelection() {
-    selectedPositions.forEach(pos => {
-    let [row, col] = pos.split(',').map(Number);
-    table.rows[row].cells[col].classList.remove('selected');
-  });
-    selectedPositions.clear();
-  }
+function createLineElement(startCellElement, currentCellElement, temporary = true) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  const startRect = startCellElement.getBoundingClientRect();
+  const currentRect = currentCellElement.getBoundingClientRect();
+  const svgRect = svg.getBoundingClientRect();
+
+  line.setAttribute('x1', startRect.left + startRect.width / 2 - svgRect.left);
+  line.setAttribute('y1', startRect.top + startRect.height / 2 - svgRect.top);
+  line.setAttribute('x2', currentRect.left + currentRect.width / 2 - svgRect.left);
+  line.setAttribute('y2', currentRect.top + currentRect.height / 2 - svgRect.top);
+
+  // Adjust stroke color based on whether the line is temporary or permanent
+  line.setAttribute('stroke', temporary ? 'black' : 'red');
+  line.setAttribute('stroke-width', '2');
+
+  // Adjust class based on whether the line is temporary or permanent
+  line.classList.add(temporary ? 'temporary-line' : 'permanent-line');
+
+  return line;
+}
+
+});
+const hiddenWordCorrect = 'GOALKEEP'
 function checkAllWordsFound() {
-    const allWords = document.querySelectorAll('#word-list li');
-    const allFound = Array.from(allWords).every(li => li.classList.contains('crossed-out'));
-
-    if (allFound) {
-        endTime = Date.now();
-        clearInterval(timerInterval); // Stop updating the timer display
-        showCongratulations();
-        displayCompletionTime();
-    }
+  const words = document.querySelectorAll('#word-list li:not(.crossed-out)');
+  return words.length === 0; // True if all words are crossed out
 }
-
-function displayCompletionTime() {
-    const completionTime = endTime - startTime;
-    const minutes = Math.floor(completionTime / 60000);
-    const seconds = ((completionTime % 60000) / 1000).toFixed(0);
-    // Display the completion time in the congratulations modal or another preferred location
-    document.getElementById('completionTime').textContent = `${minutes}m ${seconds}s`;
-}
-
-
-function showCongratulations() {
+function showCongratsModal() {
   document.getElementById('congratsModal').style.display = 'block';
 }
-
-function finalizeSelection() {
-  let word = Array.from(selectedPositions).map(pos => {
-    let [row, col] = pos.split(',').map(Number);
-    return puzzle[row][col];
-  }).join('');
-
-  let isWordFound = words.includes(word);
-
-  // If the word is correct, apply the green-selected class and strikethrough the word in the list
-  if (isWordFound) {
-    selectedPositions.forEach(pos => {
-      let [row, col] = pos.split(',').map(Number);
-      let cell = table.rows[row].cells[col];
-      cell.classList.remove('selected'); // Remove the temporary selection highlight
-      cell.classList.add('green-selected'); // Add the permanent correct word highlight
-    });
-
-    // Strikethrough the found word in the word list
-    document.querySelectorAll('#word-list li').forEach(li => {
-      if (li.textContent.toUpperCase() === word) {
-        li.classList.add('crossed-out');
-      }
-    });
-    checkAllWordsFound();
-  }
-
-
-  // Clear the selection
-  if (!isWordFound) {
-    // If the word is not found, just remove the yellow selection highlight from all cells
-    selectedPositions.forEach(pos => {
-      let [row, col] = pos.split(',').map(Number);
-      table.rows[row].cells[col].classList.remove('selected');
-    });
-  }
-
-  // Reset selection tracking
-  startCell = null;
-  endCell = null;
-  selectedPositions.clear();
-}
-document.getElementById('resetButton').addEventListener('click', function() {
-  var confirmReset = confirm("Weet je zeker dat je opnieuw wilt beginnen?");
-  if (confirmReset) {
-    // Reset the game
-    location.reload(); // Simple page reload resets the game
-  }
-});
-
-document.getElementById('showSolutionButton').addEventListener('click', function() {
-  document.querySelectorAll('#word-list li').forEach(function(li) {
-    li.classList.add('crossed-out'); // Simulate finding all words
-    // Optionally, highlight all words in green in the puzzle
-    var word = li.textContent.toUpperCase();
-    highlightWordInGrid(word);
+function resetGame() {
+  // Remove 'crossed-out' class from all words in the list
+  document.querySelectorAll('#word-list li').forEach(item => {
+    item.classList.remove('crossed-out');
   });
-});
 
-function highlightWordInGrid(word) {
-    const directions = [
-        { dx: 1, dy: 0 }, { dx: -1, dy: 0 }, // Right, Left
-        { dx: 0, dy: 1 }, { dx: 0, dy: -1 }, // Down, Up
-        { dx: 1, dy: 1 }, { dx: -1, dy: -1 }, // Diagonal Down-Right, Diagonal Up-Left
-        { dx: 1, dy: -1 }, { dx: -1, dy: 1 }  // Diagonal Up-Right, Diagonal Down-Left
-    ];
+  // Clear the hidden word input
+  document.getElementById('hiddenWordInput').value = '';
 
-    // Iterate over each cell in the grid
-    for (let row = 0; row < puzzle.length; row++) {
-        for (let col = 0; col < puzzle[row].length; col++) {
-            if (puzzle[row][col] === word[0]) { // Check if the cell matches the first letter of the word
-                for (let direction of directions) { // Check each direction
-                    if (checkWordInDirection(word, row, col, direction.dx, direction.dy)) {
-                        highlightCells(word, row, col, direction.dx, direction.dy);
-                        return; // Assuming only one instance of each word
-                    }
-                }
-            }
-        }
-    }
+  // Remove all lines from the SVG (both temporary and permanent)
+  const svg = document.getElementById('selection-line');
+  while (svg.firstChild) {
+    svg.removeChild(svg.firstChild);
+  }
+
+  // Hide the congratsModal if it's showing
+  document.getElementById('congratsModal').style.display = 'none';
+}
+function checkHiddenWord() {
+  if (!checkAllWordsFound()) {
+    alert('Please find all words before checking the hidden word.');
+    return;
+  }
+
+  const enteredWord = document.getElementById('hiddenWordInput').value.toUpperCase(); // Assuming your words are in uppercase
+
+  if (enteredWord === hiddenWordCorrect) {
+    // Trigger the congratulations modal
+    showCongratsModal();
+  } else {
+    alert('The entered hidden word is incorrect. Please try again.');
+  }
 }
 
-function checkWordInDirection(word, row, col, dx, dy) {
-    for (let i = 0; i < word.length; i++) {
-        let newRow = row + i * dy;
-        let newCol = col + i * dx;
-
-        // Check boundaries
-        if (newRow < 0 || newRow >= puzzle.length || newCol < 0 || newCol >= puzzle[row].length) {
-            return false; // Out of bounds
-        }
-
-        // Check if the letters match
-        if (puzzle[newRow][newCol] !== word[i]) {
-            return false; // Letter mismatch
-        }
-    }
-    return true; // Word found in this direction
-}
-
-function highlightCells(word, row, col, dx, dy) {
-    for (let i = 0; i < word.length; i++) {
-        let newRow = row + i * dy;
-        let newCol = col + i * dx;
-        let cell = document.querySelector(`td[data-row="${newRow}"][data-col="${newCol}"]`);
-        cell.classList.add('green-selected');
-    }
-}
-function getTimeUntilNextPuzzle() {
-    const now = new Date();
-    let nextPuzzleTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0); // Today at 9:00 AM
-
-    // If it's already past 9:00 AM today, set the target to 9:00 AM tomorrow
-    if (now > nextPuzzleTime) {
-        nextPuzzleTime.setDate(nextPuzzleTime.getDate() + 1);
-    }
-
-    const diffMs = nextPuzzleTime - now; // Difference in milliseconds
-    return diffMs;
-}
-function startCountdown() {
-    const countdownElement = document.getElementById('countdownTimer');
-
-    const updateCountdown = () => {
-        const timeLeftMs = getTimeUntilNextPuzzle();
-        const hours = Math.floor((timeLeftMs / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((timeLeftMs / (1000 * 60)) % 60);
-        const seconds = Math.floor((timeLeftMs / 1000) % 60);
-
-        // Use innerHTML to set the content with HTML for line breaks
-        countdownElement.innerHTML = `<strong>Tijd tot de volgende puzzel van de dag:</strong><br>${hours}h ${minutes}m ${seconds}s`;
-
-        if (timeLeftMs <= 0) {
-            clearInterval(interval); // Stop the countdown when it reaches 0
-            countdownElement.innerHTML = "<strong>Een nieuwe puzzel is nu beschikbaar!</strong>";
-        }
-    };
-
-    updateCountdown(); // Update immediately, not only after 1 second
-    const interval = setInterval(updateCountdown, 1000);
-}
-
-function showCongratulations() {
-    document.getElementById('congratsModal').style.display = 'block';
-    startCountdown(); // Start the countdown timer
-}
-
-  });
 </script>
+
 </body>
 </html>
